@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KanadeK/export-checkup/raw/main/schemas/scan-report.schema.json",
+  "title": "Export Checkup scan report",
+  "type": "object",
+  "required": ["schema_version", "tool", "version", "summary", "inputs", "providers", "findings", "files"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tool": { "const": "export-checkup" },
+    "version": { "type": "string" },
+    "summary": { "$ref": "#/$defs/summary" },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "providers": { "type": "array", "items": { "$ref": "#/$defs/provider" } },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "files": { "type": "array", "items": { "$ref": "#/$defs/file" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "summary": {
+      "type": "object",
+      "required": ["inputs", "files", "bytes", "errors", "warnings", "infos"],
+      "properties": {
+        "inputs": { "type": "integer", "minimum": 0 },
+        "files": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "infos": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "required": ["label", "kind", "files", "bytes"],
+      "properties": {
+        "label": { "type": "string" },
+        "kind": { "type": "string" },
+        "files": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "provider": {
+      "type": "object",
+      "required": ["provider", "detected", "metrics"],
+      "properties": {
+        "provider": { "type": "string" },
+        "detected": { "type": "boolean" },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": ["severity", "code", "message", "remediation"],
+      "properties": {
+        "severity": { "enum": ["error", "warning", "info"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "source": { "type": "string" },
+        "remediation": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "file": {
+      "type": "object",
+      "required": ["source", "logical_path", "canonical_path", "size", "kind"],
+      "properties": {
+        "source": { "type": "string" },
+        "logical_path": { "type": "string" },
+        "canonical_path": { "type": "string" },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "kind": { "enum": ["json", "html", "media", "other"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

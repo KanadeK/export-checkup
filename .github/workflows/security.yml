@@ -1,0 +1,45 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: RustSec advisory audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit lockfile
+        run: cargo audit -D warnings
+
+  source-hygiene:
+    name: Secret and unsafe-code scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret-shaped material
+        run: python scripts/secret_scan.py --history
+      - name: Unsafe Rust remains forbidden
+        shell: bash
+        run: |
+          if rg -n 'unsafe\s*\{' src tests; then
+            echo 'unsafe Rust block found'
+            exit 1
+          fi

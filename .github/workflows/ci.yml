@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Format, lint, test, package, acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: clippy,rustfmt
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --locked --all-targets
+      - name: Package
+        run: cargo package --locked
+      - name: Healthy fixture and deterministic reports
+        shell: bash
+        run: |
+          mkdir -p .artifacts/ci
+          cargo run --locked -- scan examples/healthy --strict \
+            --json .artifacts/ci/healthy-a.json \
+            --html .artifacts/ci/healthy.html
+          cargo run --locked -- scan examples/healthy --strict \
+            --json .artifacts/ci/healthy-b.json
+          cmp .artifacts/ci/healthy-a.json .artifacts/ci/healthy-b.json
+          python -m json.tool .artifacts/ci/healthy-a.json >/dev/null
+      - name: Broken and comparison fixtures fail closed
+        shell: bash
+        run: |
+          set +e
+          cargo run --locked -- scan examples/broken
+          broken_code=$?
+          cargo run --locked -- compare \
+            --before examples/compare-before \
+            --after examples/compare-after
+          compare_code=$?
+          set -e
+          test "$broken_code" -eq 3
+          test "$compare_code" -eq 3
+      - name: Secret-shaped material
+        run: python scripts/secret_scan.py
+      - name: Upload sample evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-evidence
+          path: .artifacts/ci/
+          if-no-files-found: error
+          retention-days: 14
+
+  cross-platform:
+    name: Test ${{ matrix.os }}
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+      - run: cargo test --locked --all-targets
+      - run: cargo run --locked -- scan examples/healthy --strict
+
+  coverage:
+    name: Line coverage (80% minimum)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: llvm-tools-preview
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --locked
+      - name: Enforce line coverage
+        run: cargo llvm-cov --locked --all-targets --summary-only --fail-under-lines 80
+
+  msrv:
+    name: Rust 1.85 minimum version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - run: cargo check --locked --all-targets

@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible scanner, report, or comparison defect using synthetic data.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never attach a real personal export or report.** Reduce the issue to invented files first. Security-sensitive archive handling bugs belong in a private advisory.
+  - type: input
+    id: version
+    attributes:
+      label: Export Checkup version
+      placeholder: export-checkup 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and architecture
+      placeholder: Windows 11 x86_64
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Redacted command and exit code
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and finding codes
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed all personal exports, names, message content, and private paths.
+          required: true
