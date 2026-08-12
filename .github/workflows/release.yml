@@ -99,7 +99,7 @@ jobs:
           cd dist
           sha256sum * | LC_ALL=C sort -k2 > SHA256SUMS
       - name: Attest release artifacts
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
       - name: Create GitHub Release
