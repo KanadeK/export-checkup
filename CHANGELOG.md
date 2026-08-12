@@ -4,6 +4,13 @@ All notable changes are documented here. This project follows [Semantic Versioni
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-12
+
+### Fixed
+
+- Replaced the retired `macos-13` Intel release runner with `macos-15-intel`.
+- Upgraded official GitHub Actions to Node.js 24-compatible major versions.
+
 ## [0.1.0] - 2026-08-12
 
 ### Added
