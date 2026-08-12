@@ -54,7 +54,7 @@ jobs:
           Copy-Item "target/${{ matrix.target }}/release/export-checkup.exe" "stage/$name/"
           Copy-Item LICENSE,README.md "stage/$name/"
           Compress-Archive -Path "stage/$name" -DestinationPath "$name.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: binary-${{ matrix.target }}
           path: export-checkup-${{ github.ref_name }}-${{ matrix.target }}.${{ matrix.archive }}
@@ -72,7 +72,7 @@ jobs:
           mkdir dist
           cp target/package/export-checkup-*.crate "dist/export-checkup-${GITHUB_REF_NAME}.crate"
           cp Cargo.lock "dist/export-checkup-${GITHUB_REF_NAME}-Cargo.lock"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: source-package
           path: dist/
