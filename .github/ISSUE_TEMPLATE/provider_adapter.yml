@@ -1,0 +1,33 @@
+name: Provider adapter request
+description: Propose a documented personal-data export format for read-only checks.
+title: "adapter: "
+labels: [enhancement, adapter]
+body:
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and export format
+      placeholder: Example Service JSON export
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Public format evidence
+      description: Link official documentation or a public synthetic fixture. Do not attach your export.
+    validations:
+      required: true
+  - type: textarea
+    id: invariant
+    attributes:
+      label: Integrity relationship to check
+      placeholder: Each message attachment URI should resolve to one file across all ZIP parts.
+    validations:
+      required: true
+  - type: textarea
+    id: repair
+    attributes:
+      label: Safe repair guidance
+      description: Explain what a user should do when the relationship is broken without mutating evidence.
+    validations:
+      required: true

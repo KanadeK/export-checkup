@@ -1,0 +1,18 @@
+{
+  "participants": [
+    {
+      "name": "Synthetic Friend"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Synthetic Friend",
+      "timestamp_ms": 1767225600000,
+      "photos": [
+        {
+          "uri": "your_instagram_activity/messages/inbox/friend_123/media/missing.svg"
+        }
+      ]
+    }
+  ]
+}

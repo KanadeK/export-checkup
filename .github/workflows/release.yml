@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+          - os: macos-13
+            target: x86_64-apple-darwin
+            archive: tar.gz
+          - os: macos-14
+            target: aarch64-apple-darwin
+            archive: tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          targets: ${{ matrix.target }}
+      - name: Build locked release binary
+        run: cargo build --locked --release --target ${{ matrix.target }}
+      - name: Package Unix binary
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          name="export-checkup-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          mkdir -p "stage/$name"
+          cp "target/${{ matrix.target }}/release/export-checkup" "stage/$name/"
+          cp LICENSE README.md "stage/$name/"
+          tar -C stage -czf "$name.tar.gz" "$name"
+      - name: Package Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $name = "export-checkup-$env:GITHUB_REF_NAME-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force -Path "stage/$name" | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/export-checkup.exe" "stage/$name/"
+          Copy-Item LICENSE,README.md "stage/$name/"
+          Compress-Archive -Path "stage/$name" -DestinationPath "$name.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: export-checkup-${{ github.ref_name }}-${{ matrix.target }}.${{ matrix.archive }}
+          if-no-files-found: error
+
+  source:
+    name: Package crate and lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97.0
+      - run: cargo package --locked
+      - shell: bash
+        run: |
+          mkdir dist
+          cp target/package/export-checkup-*.crate "dist/export-checkup-${GITHUB_REF_NAME}.crate"
+          cp Cargo.lock "dist/export-checkup-${GITHUB_REF_NAME}-Cargo.lock"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-package
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish checksummed GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, source]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Generate checksums
+        shell: bash
+        run: |
+          cd dist
+          sha256sum * | LC_ALL=C sort -k2 > SHA256SUMS
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --verify-tag \
+            --generate-notes \
+            --title "Export Checkup $GITHUB_REF_NAME"

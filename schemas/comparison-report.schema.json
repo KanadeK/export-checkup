@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KanadeK/export-checkup/raw/main/schemas/comparison-report.schema.json",
+  "title": "Export Checkup comparison report",
+  "type": "object",
+  "required": ["schema_version", "tool", "version", "summary", "findings", "before", "after"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tool": { "const": "export-checkup" },
+    "version": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "required": ["missing_after", "added_after", "changed", "before_errors", "after_errors"],
+      "properties": {
+        "missing_after": { "type": "integer", "minimum": 0 },
+        "added_after": { "type": "integer", "minimum": 0 },
+        "changed": { "type": "integer", "minimum": 0 },
+        "before_errors": { "type": "integer", "minimum": 0 },
+        "after_errors": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "scan-report.schema.json#/$defs/finding" }
+    },
+    "before": { "$ref": "scan-report.schema.json" },
+    "after": { "$ref": "scan-report.schema.json" }
+  },
+  "additionalProperties": false
+}
