@@ -18,7 +18,7 @@ jobs:
     name: Format, lint, test, package, acceptance
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.97.0
         with:
           components: clippy,rustfmt
@@ -73,7 +73,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.97.0
       - run: cargo test --locked --all-targets
       - run: cargo run --locked -- scan examples/healthy --strict
@@ -83,7 +83,7 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.97.0
         with:
           components: llvm-tools-preview
@@ -96,6 +96,6 @@ jobs:
     name: Rust 1.85 minimum version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.85.0
       - run: cargo check --locked --all-targets
