@@ -4,7 +4,7 @@ All notable changes are documented here. This project follows [Semantic Versioni
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-08-09
+## [0.1.0] - 2026-08-12
 
 ### Added
 
